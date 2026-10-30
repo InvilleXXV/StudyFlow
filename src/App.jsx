@@ -1,121 +1,163 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+
+import { useState, useEffect } from "react"
+import "./App.css"
 
 function App() {
-  const [count, setCount] = useState(0)
+const [materias, setMaterias] = useState(() => {
+  return JSON.parse(localStorage.getItem("studyflow_materias")) || []
+})
+
+const [tarefas, setTarefas] = useState(() => {
+  return JSON.parse(localStorage.getItem("studyflow_tarefas")) || []
+})
+
+useEffect(() => {
+  localStorage.setItem("studyflow_materias", JSON.stringify(materias))
+}, [materias])
+
+useEffect(() => {
+  localStorage.setItem("studyflow_tarefas", JSON.stringify(tarefas))
+}, [tarefas])
+
+  const [novaMateria, setNovaMateria] = useState("")
+  const [novaTarefa, setNovaTarefa] = useState("")
+  const [prazo, setPrazo] = useState("")
+
+  function adicionarMateria() {
+    if (!novaMateria.trim()) return
+
+    setMaterias([...materias, {
+      id: Date.now(),
+      nome: novaMateria
+    }])
+
+    setNovaMateria("")
+  }
+
+  function adicionarTarefa() {
+    if (!novaTarefa.trim() || !prazo) return
+
+    setTarefas([...tarefas, {
+      id: Date.now(),
+      nome: novaTarefa,
+      prazo,
+      concluida: false
+    }])
+
+    setNovaTarefa("")
+    setPrazo("")
+  }
+
+  function concluirTarefa(id) {
+    setTarefas(tarefas.map(tarefa =>
+      tarefa.id === id
+        ? { ...tarefa, concluida: !tarefa.concluida }
+        : tarefa
+    ))
+  }
+
+  function excluirTarefa(id) {
+    setTarefas(tarefas.filter(tarefa => tarefa.id !== id))
+  }
+
+  const concluidas = tarefas.filter(t => t.concluida).length
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app">
+      <header>
+        <h1>StudyFlow</h1>
+        <p>Organize seus estudos de forma simples.</p>
+      </header>
 
-      <div className="ticks"></div>
+      <main>
+        <section className="resumo">
+          <div className="card">
+            <h3>Matérias</h3>
+            <strong>{materias.length}</strong>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="card">
+            <h3>Tarefas</h3>
+            <strong>{tarefas.length}</strong>
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+          <div className="card">
+            <h3>Concluídas</h3>
+            <strong>{concluidas}</strong>
+          </div>
+
+          <div className="card">
+            <h3>Pendentes</h3>
+            <strong>{tarefas.length - concluidas}</strong>
+          </div>
+        </section>
+
+        <section className="painel">
+          <div className="bloco">
+            <h2>Minhas matérias</h2>
+
+            <div className="formulario">
+              <input
+                value={novaMateria}
+                onChange={e => setNovaMateria(e.target.value)}
+                placeholder="Nome da matéria"
+              />
+              <button onClick={adicionarMateria}>Adicionar</button>
+            </div>
+
+            {materias.map(materia => (
+              <div className="item" key={materia.id}>
+                {materia.nome}
+                <button onClick={() =>
+                  setMaterias(materias.filter(m => m.id !== materia.id))
+                }>Excluir</button>
+              </div>
+            ))}
+          </div>
+
+          <div className="bloco">
+            <h2>Minhas tarefas</h2>
+
+            <div className="formulario">
+              <input
+                value={novaTarefa}
+                onChange={e => setNovaTarefa(e.target.value)}
+                placeholder="Nome da tarefa"
+              />
+
+              <input
+                type="date"
+                value={prazo}
+                onChange={e => setPrazo(e.target.value)}
+              />
+
+              <button onClick={adicionarTarefa}>Adicionar</button>
+            </div>
+
+            {tarefas.map(tarefa => (
+              <div className="item" key={tarefa.id}>
+                <div>
+                  <span className={tarefa.concluida ? "concluida" : ""}>
+                    {tarefa.nome}
+                  </span>
+                  <small>Entrega: {tarefa.prazo}</small>
+                </div>
+
+                <div className="acoes">
+                  <button onClick={() => concluirTarefa(tarefa.id)}>
+                    {tarefa.concluida ? "Desfazer" : "Concluir"}
+                  </button>
+
+                  <button onClick={() => excluirTarefa(tarefa.id)}>
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   )
 }
 
